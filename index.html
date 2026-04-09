@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContentLab Credit Tracker - Bravo Studios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #e63946; --primary-dark: #c91b2a; --bg: #f5f5f5; --surface: #ffffff; --text-primary: #1a1a1a; --text-secondary: #5a5a5a; --border: #e0e0e0; }
+        body { background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%); color: var(--text-primary); font-family: 'Geist', sans-serif; font-size: 14px; line-height: 1.6; min-height: 100vh; }
+        .login-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .login-page.hidden { display: none; }
+        .login-card { background: var(--surface); border: 1px solid var(--border); padding: 48px 40px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; }
+        .bravo-logo { text-align: center; margin-bottom: 30px; }
+        .bravo-logo h2 { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+        .bravo-logo p { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 2px; }
+        .login-header { text-align: center; margin-bottom: 40px; }
+        .login-header h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+        .login-header p { color: var(--text-secondary); font-size: 14px; }
+        .error-message { background: rgba(199, 27, 42, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 12px; display: none; }
+        .error-message.show { display: block; }
+        .success-message { background: rgba(6, 168, 125, 0.1); border: 1px solid #06a77d; color: #06a77d; padding: 12px; border-radius: 6px; font-size: 12px; display: none; position: fixed; top: 20px; right: 20px; z-index: 1000; }
+        .success-message.show { display: block; }
+        .container { max-width: 1900px; margin: 0 auto; padding: 40px 20px; }
+        .app-page.hidden { display: none; }
+        header { margin-bottom: 50px; padding-bottom: 30px; border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .header-bravo { display: flex; flex-direction: column; }
+        .header-bravo h1 { font-size: 28px; font-weight: 700; margin-bottom: 5px; }
+        .header-bravo .logo-text { font-size: 10px; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+        .header-subtitle { color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .logout-btn { background: var(--bg); color: var(--text-primary); border: 1.5px solid var(--border); padding: 8px 12px; width: auto; font-size: 10px; margin: 0; border-radius: 6px; cursor: pointer; font-weight: 700; }
+        .logout-btn:hover { background: var(--border); }
+        .view-toggle { display: flex; gap: 8px; }
+        .view-btn { background: var(--bg); color: var(--text-primary); border: 1.5px solid var(--border); padding: 8px 12px; font-size: 10px; margin: 0; border-radius: 6px; cursor: pointer; font-weight: 700; transition: all 0.2s ease; }
+        .view-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .view-btn:hover { border-color: var(--primary); }
+        .main-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
+        .panel { background: var(--surface); border: 1px solid var(--border); padding: 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); }
+        .panel-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 700; }
+        input, select { width: 100%; background: var(--bg); border: 1.5px solid var(--border); color: var(--text-primary); padding: 10px 12px; font-family: 'Geist', sans-serif; font-size: 13px; border-radius: 6px; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.1); }
+        button { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; border: none; padding: 11px 20px; font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; border-radius: 6px; width: 100%; margin-top: 8px; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(230, 57, 70, 0.3); }
+        .search-bar { position: relative; margin-bottom: 15px; }
+        .search-bar input { padding-left: 30px; }
+        .clients-list { display: flex; flex-direction: column; gap: 10px; max-height: 500px; overflow-y: auto; }
+        .client-item { background: var(--bg); border: 1.5px solid var(--border); padding: 12px; border-radius: 6px; transition: all 0.2s ease; }
+        .client-item:hover { border-color: var(--primary); }
+        .client-item.active { border-color: var(--primary); background: rgba(230, 57, 70, 0.08); }
+        .client-item-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; flex: 1; }
+        .client-name { font-weight: 700; font-size: 12px; flex: 1; }
+        .delete-btn { background: #e0e0e0 !important; color: #1a1a1a !important; border: none !important; padding: 4px 8px !important; font-size: 8px !important; border-radius: 4px !important; cursor: pointer !important; font-weight: 700 !important; margin: 0 !important; width: auto !important; text-transform: none !important; letter-spacing: 0 !important; }
+        .delete-btn:hover { background: #d0d0d0 !important; }
+        .client-meta { font-size: 10px; color: var(--text-secondary); margin-top: 6px; line-height: 1.4; }
+        .dashboard-content { display: flex; flex-direction: column; gap: 24px; }
+        .no-client { color: var(--text-secondary); text-align: center; padding: 60px 20px; }
+        .contract-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; padding: 30px; border-radius: 12px; }
+        .contract-title { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
+        .contract-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 20px; }
+        .contract-detail { border-right: 1px solid rgba(255, 255, 255, 0.2); padding-right: 15px; }
+        .contract-detail:last-child { border-right: none; }
+        .detail-label { font-size: 9px; text-transform: uppercase; opacity: 0.85; margin-bottom: 6px; }
+        .detail-value { font-size: 18px; font-weight: 700; }
+        .month-tabs { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; margin: 20px 0; }
+        .month-tab { background: var(--bg); border: 1.5px solid var(--border); padding: 8px; cursor: pointer; font-size: 10px; text-align: center; border-radius: 6px; font-weight: 700; }
+        .month-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; }
+        .stat-box { background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: 8px; text-align: center; }
+        .stat-label { font-size: 10px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; }
+        .stat-value { font-size: 22px; font-weight: 700; color: var(--primary); }
+        .content-types { background: var(--surface); border: 1px solid var(--border); padding: 20px; border-radius: 8px; }
+        .content-type-header { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+        .content-type-row { display: grid; grid-template-columns: 1.5fr 50px 50px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+        .content-type-row:last-child { border-bottom: none; }
+        .content-type-row label { margin: 0; text-transform: none; text-align: left; font-size: 12px; font-weight: 700; }
+        .content-type-row input { margin: 0; padding: 6px; text-align: center; }
+        .credit-cost { font-size: 11px; color: var(--text-secondary); text-align: center; }
+        .credit-display { text-align: right; font-weight: 700; color: var(--primary); }
+        .other-section { background: var(--bg); padding: 12px; border-radius: 6px; border: 1px solid var(--border); margin-top: 12px; }
+        .other-desc { font-size: 10px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.4; }
+        .other-desc strong { color: var(--text-primary); }
+        .other-inputs { display: grid; grid-template-columns: 1fr 80px; gap: 8px; }
+        .summary-section { background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: 8px; }
+        .summary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-label { color: var(--text-secondary); font-weight: 700; }
+        .summary-value { text-align: right; font-weight: 700; }
+        .email-template { background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: 8px; display: none; margin-top: 12px; }
+        .email-template.show { display: block; }
+        .email-text { font-size: 11px; line-height: 1.8; white-space: pre-wrap; word-break: break-word; background: var(--bg); padding: 12px; border-radius: 6px; max-height: 400px; overflow-y: auto; font-family: monospace; }
+        .about-page.hidden { display: none; }
+        .about-content { max-width: 900px; margin: 0 auto; }
+        .about-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; padding: 40px; border-radius: 12px; margin-bottom: 40px; text-align: center; }
+        .about-header h2 { font-size: 28px; font-weight: 700; margin-bottom: 12px; }
+        .about-header p { font-size: 14px; opacity: 0.9; }
+        .step-card { background: var(--surface); border: 1px solid var(--border); padding: 24px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); }
+        .step-number { display: inline-block; background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; text-align: center; line-height: 40px; font-weight: 700; font-size: 18px; margin-bottom: 12px; }
+        .step-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+        .step-content { color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px; }
+        .step-content strong { color: var(--text-primary); }
+        .step-highlight { background: rgba(230, 57, 70, 0.1); border-left: 4px solid var(--primary); padding: 12px; border-radius: 4px; margin: 12px 0; font-size: 12px; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 20px; }
+        .feature-item { background: var(--bg); padding: 16px; border-radius: 8px; border: 1px solid var(--border); }
+        .feature-item h4 { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 8px; text-transform: uppercase; }
+        .feature-item p { font-size: 12px; color: var(--text-secondary); }
+        footer { margin-top: 50px; padding-top: 30px; border-top: 2px solid var(--border); text-align: center; color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .footer-bravo { color: var(--primary); font-weight: 700; }
+        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } .header-left { flex-direction: column; align-items: flex-start; } }
+    </style>
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div id="loginPage" class="login-page">
+        <div class="login-card">
+            <div class="bravo-logo">
+                <h2>BRAVO STUDIOS</h2>
+                <p>Sports Media & Commercial Infrastructure</p>
+            </div>
+            <div class="login-header">
+                <h1>ContentLab Tracker</h1>
+                <p>Credit Management System</p>
+            </div>
+            <div class="error-message" id="loginError"></div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password">
+            </div>
+            <button onclick="login()">Sign In</button>
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center;">
+                <button onclick="showAboutPage()" style="background: none; color: var(--text-secondary); border: none; text-transform: none; letter-spacing: 0; font-size: 11px; margin: 0; padding: 0; width: auto; text-decoration: underline;">How to use?</button>
+                <div style="margin-top: 20px; font-size: 9px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">
+                    © 2026 <span style="color: var(--primary); font-weight: 700;">Bravo Studios</span> • All Rights Reserved
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="success-message" id="successMsg">✓ Copied to clipboard</div>
+
+    <!-- ABOUT PAGE -->
+    <div id="aboutPage" class="about-page hidden">
+        <div class="container">
+            <header>
+                <div class="header-left">
+                    <div class="header-bravo">
+                        <h1>ContentLab Tracker</h1>
+                        <span class="logo-text">Credit Management System</span>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="backToHome()">Back to Home</button>
+            </header>
+
+            <div class="about-content">
+                <div class="about-header">
+                    <h2>How to Use ContentLab Tracker</h2>
+                    <p>Step-by-step guide for your team</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Log In</div>
+                    <div class="step-content">
+                        Enter your username <strong>(bravo)</strong> and password to access the system. This ensures all credit tracking is secure and auditable.
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Add a New Client</div>
+                    <div class="step-content">
+                        On the left sidebar, fill in client details and select a plan to track their content delivery.
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Track Actual Usage (Tracker View)</div>
+                    <div class="step-content">
+                        Click the <strong>"📊 Tracker"</strong> button to log what you've actually delivered. Enter quantities for each content type. For "Other" content, specify the description and custom credit value.
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Plan Monthly Delivery (Projection View)</div>
+                    <div class="step-content">
+                        Click the <strong>"🔮 Projection"</strong> button to plan what you'll deliver each month before client meetings.
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">5</div>
+                    <div class="step-title">Manage Settings</div>
+                    <div class="step-content">
+                        Click <strong>"⚙️ Settings"</strong> to update plan pricing and credits. Changes apply to new clients only.
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">6</div>
+                    <div class="step-title">Generate Monthly Invoice</div>
+                    <div class="step-content">
+                        In Tracker view, click <strong>"📋 Copy Invoice Text"</strong> to auto-generate a professional invoice based on actual usage.
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid var(--border); text-align: center; color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                    © 2026 <span style="color: var(--primary); font-weight: 700;">Bravo Studios</span> • ContentLab Tracker • All Rights Reserved
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP PAGE -->
+    <div id="appPage" class="app-page hidden">
+        <div class="container">
+            <header>
+                <div class="header-left">
+                    <div class="header-bravo">
+                        <h1>ContentLab Tracker</h1>
+                        <span class="logo-text">Credit Management System</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="view-toggle">
+                        <button class="view-btn active" onclick="switchView('tracker')">📊 Tracker</button>
+                        <button class="view-btn" onclick="switchView('projection')">🔮 Projection</button>
+                        <button class="view-btn" onclick="switchView('settings')">⚙️ Settings</button>
+                        <button class="view-btn" onclick="switchView('about')">❓ Help</button>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </header>
+
+            <div class="main-grid">
+                <div class="panel">
+                    <div class="panel-title">New Client</div>
+                    <div class="form-group">
+                        <label>Client Name</label>
+                        <input type="text" id="name">
+                    </div>
+                    <div class="form-group">
+                        <label>Plan</label>
+                        <select id="plan">
+                            <option value="">Select Plan</option>
+                            <optgroup label="━ STANDARD PLANS ━">
+                                <option value="starter">Starter: 10 cr/mo • BND 850/mo</option>
+                                <option value="growth">Growth: 20 cr/mo • BND 1550/mo</option>
+                                <option value="pro">Pro: 33 cr/mo • BND 2310/mo</option>
+                            </optgroup>
+                            <optgroup label="━ LITE PLANS ━">
+                                <option value="starter-lite">Starter Lite: 10 cr/mo • BND 935/mo</option>
+                                <option value="growth-lite">Growth Lite: 20 cr/mo • BND 1705/mo</option>
+                                <option value="pro-lite">Pro Lite: 33 cr/mo • BND 2541/mo</option>
+                            </optgroup>
+                            <optgroup label="━ TRIAL PLAN ━">
+                                <option value="trial">Trial: 6 cr/mo • BND 550/mo</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Duration (months)</label>
+                        <input type="number" id="duration" value="12" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly Discount (BND) - Optional</label>
+                        <input type="number" id="discount" value="0" min="0" placeholder="0">
+                    </div>
+                    <button onclick="addClient()">+ Add Client</button>
+
+                    <div style="margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px;">
+                        <div class="panel-title">Clients</div>
+                        <div class="search-bar">
+                            <input type="text" id="search" placeholder="Search..." onkeyup="filterClients()">
+                        </div>
+                        <div class="clients-list" id="clientsList"></div>
+                    </div>
+                </div>
+
+                <div id="trackerView">
+                    <div id="dashboard">
+                        <div class="no-client"><p>Select a client to begin</p></div>
+                    </div>
+                </div>
+
+                <div id="projectionView" style="display: none;">
+                    <div id="projectionDashboard">
+                        <div class="no-client"><p>Select a client to view planning</p></div>
+                    </div>
+                </div>
+
+                <div id="settingsView" style="display: none;">
+                    <div id="settingsDashboard">
+                        <div class="no-client"><p>Settings</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <footer>
+                © 2026 <span class="footer-bravo">Bravo Studios</span> • ContentLab Tracker • All Rights Reserved
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        let PLANS = { starter: { name: 'Starter', cr: 10, price: 850 }, growth: { name: 'Growth', cr: 20, price: 1550 }, pro: { name: 'Pro', cr: 33, price: 2310 }, 'starter-lite': { name: 'Starter Lite', cr: 10, price: 935 }, 'growth-lite': { name: 'Growth Lite', cr: 20, price: 1705 }, 'pro-lite': { name: 'Pro Lite', cr: 33, price: 2541 }, trial: { name: 'Trial', cr: 6, price: 550 } };
+        const CREDITS = { 'Long Reel (1–1:30 min)': 1.5, 'Short Reel (30 sec max)': 0.5, 'Highlight Video Coverage': 2, 'Photo Session': 2, 'Poster': 0.5, 'Live Update (Physical)': 2.5, 'Live Update (Remote)': 0.5 };
+        let TYPES = Object.keys(CREDITS);
+
+        let clients = {};
+        let active = { clientId: null, month: null };
+        let currentView = 'tracker';
+
+        window.addEventListener('load', () => {
+            try {
+                const saved = localStorage.getItem('contentlab_clients');
+                if (saved) {
+                    clients = JSON.parse(saved);
+                    Object.values(clients).forEach(c => {
+                        Object.values(c.months).forEach(m => {
+                            if (typeof m.date === 'string') {
+                                m.date = new Date(m.date);
+                            }
+                        });
+                    });
+                }
+                const savedPlans = localStorage.getItem('contentlab_plans');
+                if (savedPlans) {
+                    Object.assign(PLANS, JSON.parse(savedPlans));
+                }
+            } catch(e) {
+                console.error('Load error:', e);
+                clients = {};
+                localStorage.removeItem('contentlab_clients');
+            }
+            if (localStorage.getItem('loggedIn') === 'true') showApp();
+            else showLogin();
+        });
+
+        function showLogin() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('appPage').classList.add('hidden');
+            document.getElementById('aboutPage').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('appPage').classList.remove('hidden');
+            document.getElementById('aboutPage').classList.add('hidden');
+            render();
+        }
+
+        function showAboutPage() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('appPage').classList.add('hidden');
+            document.getElementById('aboutPage').classList.remove('hidden');
+        }
+
+        function backToHome() {
+            showApp();
+        }
+
+        function login() {
+            if (document.getElementById('username').value === 'bravo' && document.getElementById('password').value === 'contentlab2024') {
+                localStorage.setItem('loggedIn', 'true');
+                showApp();
+            } else {
+                const err = document.getElementById('loginError');
+                err.textContent = 'Invalid credentials';
+                err.classList.add('show');
+                setTimeout(() => err.classList.remove('show'), 3000);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('loggedIn');
+            active = { clientId: null, month: null };
+            showLogin();
+        }
+
+        function switchView(view) {
+            if (view === 'about') {
+                showAboutPage();
+                return;
+            }
+            currentView = view;
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (view === 'tracker') {
+                document.getElementById('trackerView').style.display = '';
+                document.getElementById('projectionView').style.display = 'none';
+                document.getElementById('settingsView').style.display = 'none';
+            } else if (view === 'projection') {
+                document.getElementById('trackerView').style.display = 'none';
+                document.getElementById('projectionView').style.display = '';
+                document.getElementById('settingsView').style.display = 'none';
+            } else if (view === 'settings') {
+                document.getElementById('trackerView').style.display = 'none';
+                document.getElementById('projectionView').style.display = 'none';
+                document.getElementById('settingsView').style.display = '';
+                renderSettings();
+            }
+            render();
+        }
+
+        function addClient() {
+            const name = document.getElementById('name').value;
+            const planId = document.getElementById('plan').value;
+            const start = document.getElementById('startDate').value;
+            const dur = parseInt(document.getElementById('duration').value) || 12;
+            const discount = parseFloat(document.getElementById('discount').value) || 0;
+
+            if (!name || !planId || !start) return alert('Fill all fields');
+
+            const plan = PLANS[planId];
+            const startDate = new Date(start);
+            const finalPrice = Math.max(0, plan.price - discount); // Final price after discount
+            const months = {};
+
+            for (let i = 0; i < dur; i++) {
+                const d = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
+                const key = d.toLocaleString('default', { month: 'short', year: '2-digit' }).toUpperCase();
+                months[key] = { date: d, usage: {}, monthNum: i + 1, totalMonths: dur, otherContent: [], bonusCredits: 0 };
+                TYPES.forEach(t => months[key].usage[t] = 0);
+            }
+
+            const id = Date.now().toString();
+            clients[id] = { id, name, plan: plan.name, cr: plan.cr, price: finalPrice, discount: discount, total: plan.cr * dur, months, used: 0 };
+
+            localStorage.setItem('contentlab_clients', JSON.stringify(clients));
+            document.getElementById('name').value = '';
+            document.getElementById('plan').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('duration').value = '12';
+            document.getElementById('discount').value = '0';
+            render();
+        }
+
+        function deleteClientNow(clientId) {
+            const c = clients[clientId];
+            const msg = `Delete "${c.name}"?\n\nPlan: ${c.plan}\nCredits/mo: ${c.cr}\nPrice/mo: BND ${c.price}\nTotal: ${c.total} cr\n\nThis cannot be undone.`;
+            
+            if (window.confirm(msg)) {
+                delete clients[clientId];
+                if (active.clientId === clientId) {
+                    active = { clientId: null, month: null };
+                }
+                localStorage.setItem('contentlab_clients', JSON.stringify(clients));
+                render();
+            }
+        }
+
+        function filterClients() {
+            render();
+        }
+
+        function selectClient(id, m) {
+            active.clientId = id;
+            active.month = m || Object.keys(clients[id].months)[0];
+            render();
+        }
+
+        function render() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const list = Object.values(clients).filter(c => c.name.toLowerCase().includes(search));
+            const clientsDiv = document.getElementById('clientsList');
+            clientsDiv.innerHTML = '';
+
+            list.forEach(c => {
+                const div = document.createElement('div');
+                div.className = `client-item ${active.clientId === c.id ? 'active' : ''}`;
+                
+                const header = document.createElement('div');
+                header.className = 'client-item-header';
+                header.innerHTML = `
+                    <div class="client-name">${c.name}</div>
+                    <button class="delete-btn" type="button">Delete</button>
+                `;
+                header.querySelector('.client-name').style.cursor = 'pointer';
+                header.querySelector('.client-name').onclick = () => selectClient(c.id);
+                header.querySelector('.delete-btn').onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    deleteClientNow(c.id);
+                };
+
+                const meta = document.createElement('div');
+                meta.className = 'client-meta';
+                const totalBonusCredits = Object.values(c.months).reduce((sum, m) => sum + (m.bonusCredits || 0), 0);
+                const totalBaseCredits = c.cr * c.months[Object.keys(c.months)[0]].totalMonths;
+                meta.innerHTML = `${c.plan}<br>${c.cr} cr/mo • BND ${c.price}/mo<br>Total: ${totalBaseCredits}${totalBonusCredits > 0 ? ` + ${totalBonusCredits} bonus` : ''} cr`;
+                meta.style.cursor = 'pointer';
+                meta.onclick = () => selectClient(c.id);
+
+                div.appendChild(header);
+                div.appendChild(meta);
+                clientsDiv.appendChild(div);
+            });
+
+            if (currentView === 'tracker') {
+                renderTracker();
+            } else if (currentView === 'projection') {
+                renderProjection();
+            }
+        }
+
+        function renderTracker() {
+            if (active.clientId && clients[active.clientId]) {
+                const c = clients[active.clientId];
+                const m = active.month || Object.keys(c.months)[0];
+                const month = c.months[m];
+                let used = Object.values(month.usage).reduce((a, b) => a + b, 0);
+                // Add otherContent totals
+                if (month.otherContent && month.otherContent.length > 0) {
+                    used += month.otherContent.reduce((sum, item) => sum + item.total, 0);
+                }
+                // Calculate total bonus credits across all months
+                const totalBonusCredits = Object.values(c.months).reduce((sum, m) => sum + (m.bonusCredits || 0), 0);
+                const totalCreditsAllocated = c.total + totalBonusCredits;
+                
+                // Calculate total usage across ALL months
+                let totalUsedAllMonths = 0;
+                Object.values(c.months).forEach(monthData => {
+                    let monthUsed = Object.values(monthData.usage).reduce((a, b) => a + b, 0);
+                    if (monthData.otherContent && monthData.otherContent.length > 0) {
+                        monthUsed += monthData.otherContent.reduce((sum, item) => sum + item.total, 0);
+                    }
+                    totalUsedAllMonths += monthUsed;
+                });
+
+                let html = `
+                    <div class="dashboard-content">
+                        <div class="contract-header">
+                            <div class="contract-title">${c.name}</div>
+                            <div class="contract-details">
+                                <div class="contract-detail"><div class="detail-label">Plan</div><div class="detail-value">${c.plan}</div></div>
+                                <div class="contract-detail"><div class="detail-label">Price/Mo</div><div class="detail-value">BND ${c.price}</div></div>
+                                <div class="contract-detail"><div class="detail-label">Status</div><div class="detail-value">${month.monthNum}/${month.totalMonths}</div></div>
+                                <div class="contract-detail"><div class="detail-label">Credits Left</div><div class="detail-value">${(totalCreditsAllocated - totalUsedAllMonths).toFixed(1)}</div></div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="month-tabs">
+                                ${Object.keys(c.months).map(mk => `<div class="month-tab ${m === mk ? 'active' : ''}" onclick="selectClient('${c.id}', '${mk}')">${mk}</div>`).join('')}
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-box"><div class="stat-label">Allocated</div><div class="stat-value">${c.cr + (month.bonusCredits || 0)}</div></div>
+                            <div class="stat-box"><div class="stat-label">Used</div><div class="stat-value">${used.toFixed(1)}</div></div>
+                            <div class="stat-box"><div class="stat-label">Remaining</div><div class="stat-value">${(c.cr + (month.bonusCredits || 0) - used).toFixed(1)}</div></div>
+                            <div class="stat-box"><div class="stat-label">Total Used</div><div class="stat-value" style="font-size: 16px;">${used.toFixed(1)} / ${(c.cr + (month.bonusCredits || 0))}</div></div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-title">Bonus Credits (This Month)</div>
+                            <div style="display: grid; grid-template-columns: 1fr 100px; gap: 10px; align-items: center;">
+                                <div>
+                                    <label style="font-size: 10px; color: var(--text-secondary); margin: 0; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Extra Credits</label>
+                                    <input type="number" id="bonusCredits_${c.id}_${m}" min="0" value="${month.bonusCredits || 0}" placeholder="0" onchange="updateBonusCredits('${c.id}', '${m}', this.value)">
+                                </div>
+                                <div>
+                                    <div style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Total</div>
+                                    <div style="background: var(--bg); padding: 10px; border-radius: 6px; border: 1px solid var(--border); text-align: center; font-weight: 700; color: var(--primary);">${c.cr + (month.bonusCredits || 0)}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="content-types">
+                            <div class="content-type-header">Content Types</div>
+                            ${TYPES.filter(t => t !== 'Other').map(t => {
+                                const qty = month.usage[t];
+                                const cred = qty * CREDITS[t];
+                                return `
+                                    <div class="content-type-row">
+                                        <label>${t}</label>
+                                        <div class="credit-cost">${CREDITS[t]}</div>
+                                        <input type="number" min="0" value="${qty}" onchange="updateUsage('${c.id}', '${m}', '${t}', this.value)">
+                                        <div class="credit-display">${cred.toFixed(1)}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                            <div class="other-section">
+                                <div class="other-desc">
+                                    <strong>Other Content:</strong> For content types not listed above, specify the type, quantity, and credit value per piece.
+                                </div>
+                                ${month.otherContent && month.otherContent.length > 0 ? `
+                                    <div style="margin-top: 12px; padding: 12px; background: var(--bg); border-radius: 6px; border-left: 4px solid var(--primary);">
+                                        <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">📋 Saved Items:</div>
+                                        ${month.otherContent.map((item, idx) => `
+                                            <div style="font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr 40px 40px 50px; gap: 8px; align-items: center;">
+                                                <div><strong>${item.type}</strong></div>
+                                                <div style="text-align: center;">${item.qty}</div>
+                                                <div style="text-align: center;">${item.cost}</div>
+                                                <div style="text-align: right; font-weight: 700; color: var(--primary);">${item.total.toFixed(1)}</div>
+                                                <button onclick="deleteOtherContent('${c.id}', '${m}', ${idx})" style="background: #e0e0e0 !important; color: #1a1a1a !important; border: none !important; padding: 4px 8px !important; font-size: 8px !important; border-radius: 4px !important; cursor: pointer !important; font-weight: 700 !important; margin: 0 !important; width: auto !important; text-transform: none !important; letter-spacing: 0 !important; grid-column: 1 / -1; justify-self: end;">Remove</button>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                                <div style="margin-top: 12px;">
+                                    <label style="font-size: 10px; color: var(--text-secondary); margin: 0; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Content Type (e.g., Documentary, Interview)</label>
+                                    <input type="text" id="otherType_${c.id}_${m}" placeholder="e.g., Documentary, Interview, Event Coverage" style="margin-bottom: 12px;">
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 80px 80px; gap: 10px;">
+                                    <div>
+                                        <label style="font-size: 10px; color: var(--text-secondary); margin: 0; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Qty</label>
+                                        <input type="number" id="otherQty_${c.id}_${m}" min="0" value="0" placeholder="0" onchange="updateOtherValue('${c.id}', '${m}')">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 10px; color: var(--text-secondary); margin: 0; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Credits</label>
+                                        <input type="number" id="otherCost_${c.id}_${m}" min="0" step="0.5" value="1" placeholder="1">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 10px; color: var(--text-secondary); margin: 0; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">Total</label>
+                                        <div style="text-align: center; font-weight: 700; color: var(--primary); background: var(--bg); padding: 10px; border-radius: 6px; border: 1px solid var(--border);" id="otherDisplay_${c.id}_${m}">0</div>
+                                    </div>
+                                </div>
+                                <button onclick="saveOtherContent('${c.id}', '${m}')" style="margin-top: 12px;">✓ Save Other Content</button>
+                            </div>
+                        </div>
+
+                        <div class="summary-section">
+                            <div class="summary-row">
+                                <div class="summary-label">This Month</div>
+                                <div class="summary-value">${used.toFixed(1)} / ${c.cr + (month.bonusCredits || 0)}</div>
+                            </div>
+                            <div class="summary-row">
+                                <div class="summary-label">Total Used (Contract)</div>
+                                <div class="summary-value">${totalUsedAllMonths.toFixed(1)} / ${totalCreditsAllocated}</div>
+                            </div>
+                        </div>
+
+                        <div class="summary-section">
+                            <div class="panel-title">Monthly Report</div>
+                            <button onclick="generateReport('${c.id}', '${m}')" style="margin-top: 0;">📋 Copy Invoice Text</button>
+                            <div id="emailDiv" class="email-template">
+                                <div class="email-text" id="emailText"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('dashboard').innerHTML = html;
+            } else {
+                document.getElementById('dashboard').innerHTML = '<div class="no-client"><p>Select a client to begin</p></div>';
+            }
+        }
+
+        function renderProjection() {
+            if (active.clientId && clients[active.clientId]) {
+                const c = clients[active.clientId];
+                const m = active.month || Object.keys(c.months)[0];
+                const month = c.months[m];
+
+                const projectionUsage = month.projectionUsage || { ...month.usage };
+                const projUsed = Object.values(projectionUsage).reduce((a, b) => a + b, 0);
+
+                let html = `
+                    <div class="dashboard-content">
+                        <div class="contract-header">
+                            <div class="contract-title">${c.name} • Planning</div>
+                            <div class="contract-details">
+                                <div class="contract-detail"><div class="detail-label">Plan</div><div class="detail-value">${c.plan}</div></div>
+                                <div class="contract-detail"><div class="detail-label">Price/Mo</div><div class="detail-value">BND ${c.price}</div></div>
+                                <div class="contract-detail"><div class="detail-label">Status</div><div class="detail-value">${month.monthNum}/${month.totalMonths}</div></div>
+                                <div class="contract-detail"><div class="detail-label">Credits Left</div><div class="detail-value">${(c.total - c.used - projUsed).toFixed(1)}</div></div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="month-tabs">
+                                ${Object.keys(c.months).map(mk => `<div class="month-tab ${m === mk ? 'active' : ''}" onclick="selectClient('${c.id}', '${mk}')">${mk}</div>`).join('')}
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-box"><div class="stat-label">Allocated</div><div class="stat-value">${c.cr}</div></div>
+                            <div class="stat-box"><div class="stat-label">Projected</div><div class="stat-value">${projUsed.toFixed(1)}</div></div>
+                            <div class="stat-box"><div class="stat-label">Available</div><div class="stat-value">${(c.cr - projUsed).toFixed(1)}</div></div>
+                        </div>
+
+                        <div class="content-types">
+                            <div class="content-type-header">Projected Content Types (Planning)</div>
+                            ${TYPES.filter(t => t !== 'Other').map(t => {
+                                const qty = projectionUsage[t] || 0;
+                                const cred = qty * CREDITS[t];
+                                return `
+                                    <div class="content-type-row">
+                                        <label>${t}</label>
+                                        <div class="credit-cost">${CREDITS[t]}</div>
+                                        <input type="number" min="0" value="${qty}" onchange="updateProjectionUsage('${c.id}', '${m}', '${t}', this.value)">
+                                        <div class="credit-display">${cred.toFixed(1)}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <div class="summary-section">
+                            <div class="summary-row">
+                                <div class="summary-label">This Month (Projected)</div>
+                                <div class="summary-value">${projUsed.toFixed(1)} / ${c.cr}</div>
+                            </div>
+                            <div class="summary-row">
+                                <div class="summary-label">Total (Projected)</div>
+                                <div class="summary-value">${(c.used + projUsed).toFixed(1)}</div>
+                            </div>
+                        </div>
+
+                        <div class="summary-section">
+                            <div class="panel-title">Planning Notes</div>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Edit the content types above to plan your monthly delivery. Compare against actual usage in the Tracker view.</p>
+                            <button onclick="switchView('tracker')" style="margin-top: 0; background: var(--bg); color: var(--text-primary); border: 1.5px solid var(--border); margin-bottom: 0;">← Back to Tracker</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('projectionDashboard').innerHTML = html;
+            } else {
+                document.getElementById('projectionDashboard').innerHTML = '<div class="no-client"><p>Select a client to view planning</p></div>';
+            }
+        }
+
+        function renderSettings() {
+            let html = `
+                <div class="dashboard-content">
+                    <div class="contract-header">
+                        <div class="contract-title">Plan Settings</div>
+                        <div class="contract-details">
+                            <div class="contract-detail"><div class="detail-label">Manage</div><div class="detail-value">Plans & Pricing</div></div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-title">ContentLab Plans</div>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 20px;">Update plan details and pricing. Changes apply to all new clients going forward.</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        ${Object.entries(PLANS).map(([key, plan]) => `
+                            <div class="panel" style="position: relative;">
+                                <div class="panel-title">${plan.name}</div>
+                                <div class="form-group">
+                                    <label>Credits/Month</label>
+                                    <input type="number" id="cr_${key}" value="${plan.cr}" min="1" onchange="updatePlanValue('${key}', 'cr', this.value)">
+                                </div>
+                                <div class="form-group">
+                                    <label>Price/Month (BND)</label>
+                                    <input type="number" id="price_${key}" value="${plan.price}" min="0" onchange="updatePlanValue('${key}', 'price', this.value)">
+                                </div>
+                                <div style="background: var(--bg); padding: 12px; border-radius: 6px; font-size: 11px; text-align: center;">
+                                    <span style="color: var(--text-secondary); font-weight: 700;">${plan.cr} credits</span><br>
+                                    <span style="color: var(--primary); font-weight: 700;">BND ${plan.price}/month</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="panel" style="margin-top: 20px; background: rgba(230, 57, 70, 0.08); border: 1px solid var(--border);">
+                        <div class="panel-title">⚠️ Important</div>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                            Changing plan prices and credits will <strong>only affect new clients</strong>. Existing clients keep their original plan terms.
+                        </p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('settingsDashboard').innerHTML = html;
+        }
+
+        function updateUsage(cid, m, t, v) {
+            clients[cid].months[m].usage[t] = parseInt(v) || 0;
+            localStorage.setItem('contentlab_clients', JSON.stringify(clients));
+            render();
+        }
+
+        function updateBonusCredits(cid, m, v) {
+            clients[cid].months[m].bonusCredits = parseInt(v) || 0;
+            localStorage.setItem('contentlab_clients', JSON.stringify(clients));
+            render();
+        }
+
+        function updateProjectionUsage(cid, m, t, v) {
+            if (!clients[cid].months[m].projectionUsage) {
+                clients[cid].months[m].projectionUsage = {};
+            }
+            TYPES.forEach(type => {
+                if (!clients[cid].months[m].projectionUsage[type]) {
+                    clients[cid].months[m].projectionUsage[type] = clients[cid].months[m].usage[type] || 0;
+                }
+            });
+            clients[cid].months[m].projectionUsage[t] = parseInt(v) || 0;
+            localStorage.setItem('contentlab_clients', JSON.stringify(clients));
+            render();
+        }
+
+        function updateOtherValue(cid, m) {
+            const qty = parseInt(document.getElementById(`otherQty_${cid}_${m}`).value) || 0;
+            const cost = parseFloat(document.getElementById(`otherCost_${cid}_${m}`).value) || 1;
+            const total = qty * cost;
+            
+            document.getElementById(`otherDisplay_${cid}_${m}`).textContent = total.toFixed(1);
+        }
+
+        function saveOtherContent(cid, m) {
+            const type = document.getElementById(`otherType_${cid}_${m}`).value.trim();
+            const qty = parseInt(document.getElementById(`otherQty_${cid}_${m}`).value) || 0;
+            const cost = parseFloat(document.getElementById(`otherCost_${cid}_${m}`).value) || 1;
+            const total = qty * cost;
+            
+            if (!type) return alert('Enter content type (e.g., Documentary, Interview)');
+            if (qty <= 0) return alert('Quantity must be at least 1');
+            
+            // Store in otherContent array for this month only
+            if (!clients[cid].months[m].otherContent) {
+                clients[cid].months[m].otherContent = [];
+            }
+            
+            clients[cid].months[m].otherContent.push({
+                type: type,
+                qty: qty,
+                cost: cost,
+                total: total
+            });
+            
+            document.getElementById(`otherType_${cid}_${m}`).value = '';
+            document.getElementById(`otherQty_${cid}_${m}`).value = 0;
+            document.getElementById(`otherCost_${cid}_${m}`).value = 1;
+            document.getElementById(`otherDisplay_${cid}_${m}`).textContent = '0';
+            
+            localStorage.setItem('contentlab_clients', JSON.stringify(clients));
+            render();
+        }
+
+        function deleteOtherContent(cid, m, idx) {
+            clients[cid].months[m].otherContent.splice(idx, 1);
+            localStorage.setItem('contentlab_clients', JSON.stringify(clients));
+            render();
+        }
+
+        function updatePlanValue(planKey, field, value) {
+            PLANS[planKey][field] = field === 'cr' ? parseInt(value) || 0 : parseFloat(value) || 0;
+            localStorage.setItem('contentlab_plans', JSON.stringify(PLANS));
+            updatePlanDropdown();
+            renderSettings();
+        }
+
+        function updatePlanDropdown() {
+            const planSelect = document.getElementById('plan');
+            const selectedValue = planSelect.value;
+            planSelect.innerHTML = `
+                <option value="">Select Plan</option>
+                <optgroup label="━ STANDARD PLANS ━">
+                    <option value="starter">Starter: ${PLANS.starter.cr} cr/mo • BND ${PLANS.starter.price}/mo</option>
+                    <option value="growth">Growth: ${PLANS.growth.cr} cr/mo • BND ${PLANS.growth.price}/mo</option>
+                    <option value="pro">Pro: ${PLANS.pro.cr} cr/mo • BND ${PLANS.pro.price}/mo</option>
+                </optgroup>
+                <optgroup label="━ LITE PLANS ━">
+                    <option value="starter-lite">Starter Lite: ${PLANS['starter-lite'].cr} cr/mo • BND ${PLANS['starter-lite'].price}/mo</option>
+                    <option value="growth-lite">Growth Lite: ${PLANS['growth-lite'].cr} cr/mo • BND ${PLANS['growth-lite'].price}/mo</option>
+                    <option value="pro-lite">Pro Lite: ${PLANS['pro-lite'].cr} cr/mo • BND ${PLANS['pro-lite'].price}/mo</option>
+                </optgroup>
+                <optgroup label="━ TRIAL PLAN ━">
+                    <option value="trial">Trial: ${PLANS.trial.cr} cr/mo • BND ${PLANS.trial.price}/mo</option>
+                </optgroup>
+            `;
+            planSelect.value = selectedValue;
+        }
+
+        function generateReport(cid, m) {
+            const c = clients[cid];
+            const month = c.months[m];
+            let used = Object.values(month.usage).reduce((a, b) => a + b, 0);
+            
+            let dateStr;
+            if (month.date instanceof Date) {
+                dateStr = month.date.toLocaleString('default', { month: 'long', year: 'numeric' });
+            } else {
+                const d = new Date(month.date);
+                dateStr = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+            }
+
+            let content = TYPES.map(t => {
+                const qty = month.usage[t];
+                if (!qty || qty === 0) return '';
+                const cost = CREDITS[t] || 1;
+                const cred = qty * cost;
+                return `${t}: ${qty} × ${cost} = ${cred.toFixed(1)} credits`;
+            }).filter(x => x).join('\n');
+
+            // Add otherContent items
+            if (month.otherContent && month.otherContent.length > 0) {
+                const otherItems = month.otherContent.map(item => {
+                    return `${item.type}: ${item.qty} × ${item.cost} = ${item.total.toFixed(1)} credits`;
+                }).join('\n');
+                content = content ? content + '\n' + otherItems : otherItems;
+                used += month.otherContent.reduce((sum, item) => sum + item.total, 0);
+            }
+
+            // Calculate total usage across ALL months (same as renderTracker)
+            let totalUsedAllMonths = 0;
+            Object.values(c.months).forEach(monthData => {
+                let monthUsed = Object.values(monthData.usage).reduce((a, b) => a + b, 0);
+                if (monthData.otherContent && monthData.otherContent.length > 0) {
+                    monthUsed += monthData.otherContent.reduce((sum, item) => sum + item.total, 0);
+                }
+                totalUsedAllMonths += monthUsed;
+            });
+
+            // Calculate total bonus credits across all months
+            const totalBonusCredits = Object.values(c.months).reduce((sum, m) => sum + (m.bonusCredits || 0), 0);
+            const totalCreditsAllocated = c.total + totalBonusCredits;
+            
+            // Show bonus in invoice if it exists
+            const bonusLine = totalBonusCredits > 0 ? `Bonus Credits (Contract): +${totalBonusCredits}\n` : '';
+
+            const email = `Attached is the invoice for ${dateStr}, amounting to BND ${c.price}, under our ContentLab ${c.plan} service with ${c.name}. The payment is due by the 3rd of ${dateStr}, representing Month ${month.monthNum} of ${month.totalMonths} in the agreed contract period.
+
+Credit Usage for ${dateStr}:
+
+${content || '(No content recorded)'}
+
+Credits Used (${m}): ${used.toFixed(1)}
+Total Credits Used (Contract to date): ${totalUsedAllMonths.toFixed(1)}
+${bonusLine}Total Contract Allocation: ${totalCreditsAllocated}
+
+Please find the invoice attached for your reference.
+
+Should you require any clarification, please let us know.`;
+
+            document.getElementById('emailText').textContent = email;
+            document.getElementById('emailDiv').classList.add('show');
+
+            navigator.clipboard.writeText(email).then(() => {
+                const msg = document.getElementById('successMsg');
+                msg.classList.add('show');
+                setTimeout(() => msg.classList.remove('show'), 2000);
+            });
+        }
+    </script>
+</body>
+</html>
